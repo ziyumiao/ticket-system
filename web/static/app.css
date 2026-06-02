@@ -1,0 +1,70 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f5f5; color: #333; }
+
+.nav { background: #1677ff; color: #fff; }
+.nav-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; padding: 0 16px; height: 50px; }
+.nav-brand { font-size: 18px; font-weight: 600; color: #fff; text-decoration: none; margin-right: 32px; }
+.nav-links a { color: rgba(255,255,255,.85); text-decoration: none; margin-right: 16px; font-size: 14px; }
+.nav-links a:hover { color: #fff; }
+
+.main { max-width: 1200px; margin: 24px auto; padding: 0 16px; }
+
+h1 { font-size: 22px; margin-bottom: 20px; }
+h2 { font-size: 18px; margin-bottom: 12px; }
+h3 { font-size: 15px; margin-bottom: 8px; }
+
+.stats { display: flex; gap: 12px; margin-bottom: 24px; }
+.stat-card { background: #fff; border-radius: 8px; flex: 1; padding: 20px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.stat-number { font-size: 36px; font-weight: 700; color: #1677ff; }
+.stat-done .stat-number { color: #52c41a; }
+.stat-closed .stat-number { color: #999; }
+.stat-label { font-size: 13px; color: #666; margin-top: 4px; }
+
+.filters { margin-bottom: 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+
+.table { width: 100%; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.table th, .table td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+.table th { background: #fafafa; font-weight: 600; color: #555; }
+.table td a { color: #1677ff; text-decoration: none; }
+
+.tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+.tag-pending { background: #fff7e6; color: #d46b08; }
+.tag-in_progress { background: #e6f4ff; color: #1677ff; }
+.tag-reviewing { background: #f9f0ff; color: #722ed1; }
+.tag-done { background: #f6ffed; color: #389e0d; }
+.tag-closed { background: #f5f5f5; color: #999; }
+.tag-low { background: #f6ffed; color: #389e0d; }
+.tag-medium { background: #fff7e6; color: #d46b08; }
+.tag-high { background: #fff2f0; color: #cf1322; }
+.tag-urgent { background: #fff1f0; color: #a8071a; }
+
+.btn { display: inline-block; padding: 6px 16px; border-radius: 6px; font-size: 14px; cursor: pointer; border: 1px solid #d9d9d9; background: #fff; color: #333; text-decoration: none; }
+.btn:hover { border-color: #1677ff; color: #1677ff; }
+.btn-sm { padding: 3px 10px; font-size: 12px; }
+.btn-active { background: #1677ff; color: #fff; border-color: #1677ff; }
+.btn-active:hover { color: #fff; }
+
+.form { background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); max-width: 600px; }
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; margin-bottom: 4px; font-size: 14px; font-weight: 500; color: #333; }
+.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #1677ff; }
+
+.pagination { display: flex; gap: 6px; margin-top: 16px; justify-content: center; }
+
+.detail-card { background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); margin-bottom: 20px; }
+.detail-card .meta { margin-bottom: 12px; display: flex; gap: 8px; }
+.detail-card .desc { font-size: 14px; color: #555; line-height: 1.6; margin-bottom: 16px; }
+.detail-card .info { font-size: 13px; color: #666; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.alert-error { background: #fff2f0; border: 1px solid #ffccc7; border-radius: 6px; padding: 10px 16px; margin-bottom: 16px; color: #cf1322; font-size: 14px; }
+
+.action-form { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); margin-bottom: 20px; max-width: 400px; }
+.action-form select, .action-form textarea { width: 100%; padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; margin-bottom: 8px; }
+
+.logs { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); margin-bottom: 20px; }
+.log-item { padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+.log-action { display: inline-block; padding: 1px 6px; border-radius: 3px; background: #f0f0f0; font-size: 12px; margin-right: 8px; }
+.log-operator { color: #1677ff; margin-right: 8px; }
+.log-time { color: #999; font-size: 12px; }
+.log-comment { color: #666; margin-top: 4px; font-size: 13px; }

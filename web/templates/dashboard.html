@@ -1,0 +1,27 @@
+{% extends "layout.html" %}
+{% block title %}仪表盘 - 钉钉工单系统{% endblock %}
+{% block content %}
+<h1>仪表盘</h1>
+<div class="stats">
+  <div class="stat-card">
+    <div class="stat-number">{{ counts.pending }}</div>
+    <div class="stat-label">待处理</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number">{{ counts.in_progress }}</div>
+    <div class="stat-label">处理中</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number">{{ counts.reviewing }}</div>
+    <div class="stat-label">待验收</div>
+  </div>
+  <div class="stat-card stat-done">
+    <div class="stat-number">{{ counts.done }}</div>
+    <div class="stat-label">已完成</div>
+  </div>
+  <div class="stat-card stat-closed">
+    <div class="stat-number">{{ counts.closed }}</div>
+    <div class="stat-label">已关闭</div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+{% block title %}创建工单 - 钉钉工单系统{% endblock %}
+{% block content %}
+<h1>创建工单</h1>
+
+<form method="post" action="/tickets/create" class="form">
+  <div class="form-group">
+    <label>标题</label>
+    <input type="text" name="title" required maxlength="200">
+  </div>
+  <div class="form-group">
+    <label>描述</label>
+    <textarea name="description" rows="4"></textarea>
+  </div>
+  <div class="form-group">
+    <label>创建人</label>
+    <select name="creator_id" required>
+      {% for u in users %}
+      <option value="{{ u.id }}">{{ u.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="form-group">
+    <label>部门</label>
+    <select name="department_id">
+      <option value="">无</option>
+      {% for d in departments %}
+      <option value="{{ d.id }}">{{ d.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="form-group">
+    <label>优先级</label>
+    <select name="priority">
+      <option value="low">low</option>
+      <option value="medium" selected>medium</option>
+      <option value="high">high</option>
+      <option value="urgent">urgent</option>
+    </select>
+  </div>
+  <button type="submit" class="btn">创建</button>
+  <a href="/tickets" class="btn">取消</a>
+</form>
+{% endblock %}

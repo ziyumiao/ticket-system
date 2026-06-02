@@ -1,0 +1,76 @@
+{% extends "layout.html" %}
+{% block title %}工单 #{{ ticket.id }} - 钉钉工单系统{% endblock %}
+{% block content %}
+<h1>工单 #{{ ticket.id }}</h1>
+
+{% if error %}
+<div class="alert alert-error">{{ error }}</div>
+{% endif %}
+
+<div class="detail-card">
+  <h2>{{ ticket.title }}</h2>
+  <div class="meta">
+    <span class="tag tag-{{ ticket.status }}">{{ ticket.status }}</span>
+    <span class="tag tag-{{ ticket.priority }}">{{ ticket.priority }}</span>
+  </div>
+  <p class="desc">{{ ticket.description }}</p>
+  <div class="info">
+    <div>创建人: {{ ticket.creator.name if ticket.creator else '' }}</div>
+    <div>处理人: {{ ticket.assignee.name if ticket.assignee else '未指派' }}</div>
+    <div>部门: {{ ticket.department.name if ticket.department else '' }}</div>
+    <div>创建时间: {{ ticket.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+    {% if ticket.closed_at %}
+    <div>关闭时间: {{ ticket.closed_at.strftime('%Y-%m-%d %H:%M') }}</div>
+    {% endif %}
+  </div>
+</div>
+
+{% if allowed_actions %}
+<div class="action-form">
+  <h3>操作</h3>
+  <form method="post" action="/tickets/{{ ticket.id }}/action">
+    <input type="hidden" name="operator_id" value="{{ ticket.creator_id }}">
+    <div class="form-group">
+      <label>动作</label>
+      <select name="action" required>
+        {% for a in allowed_actions %}
+        <option value="{{ a }}">{{ a }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% if 'assign' in allowed_actions %}
+    <div class="form-group">
+      <label>指派给</label>
+      <select name="assignee_id">
+        <option value="">自己</option>
+        {% for u in users %}
+        <option value="{{ u.id }}">{{ u.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endif %}
+    <div class="form-group">
+      <label>备注</label>
+      <textarea name="comment" rows="2"></textarea>
+    </div>
+    <button type="submit" class="btn">提交</button>
+  </form>
+</div>
+{% endif %}
+
+<div class="logs">
+  <h3>操作日志</h3>
+  {% for log in ticket.logs %}
+  <div class="log-item">
+    <span class="log-action">{{ log.action }}</span>
+    <span class="log-operator">{{ log.operator.name if log.operator else '' }}</span>
+    <span class="log-time">{{ log.created_at.strftime('%m-%d %H:%M') }}</span>
+    {% if log.comment %}
+    <p class="log-comment">{{ log.comment }}</p>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<a href="/tickets" class="btn">← 返回列表</a>
+{% endblock %}

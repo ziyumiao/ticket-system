@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}钉钉工单系统{% endblock %}</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-brand">工单系统</a>
+      <div class="nav-links">
+        <a href="/">仪表盘</a>
+        <a href="/tickets">工单列表</a>
+        <a href="/tickets/create">创建工单</a>
+        <a href="/users">用户管理</a>
+      </div>
+    </div>
+  </nav>
+  <main class="main">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>
