@@ -27,17 +27,26 @@ mcp = FastMCP("钉钉工单系统")
 
 
 @mcp.tool()
-def create_ticket(title: str, description: str = "", priority: str = "medium") -> str:
-    """创建工单（默认使用第一个用户作为创建人，后续可指定）"""
+def create_ticket(title: str, description: str = "", priority: str = "medium", creator_id: int = 0, department_id: int = 0) -> str:
+    """创建工单
+    参数: title=标题, description=描述, priority=优先级(low/medium/high/urgent), creator_id=创建人ID, department_id=部门ID
+    注意: creator_id 和 department_id 必须使用真实用户和真实部门，department_id 不能是 fallback 部门
+    """
+    if creator_id == 0 or department_id == 0:
+        return "错误: creator_id 和 department_id 为必填参数"
     with session_scope() as db:
-        user = us.list_users(db)
+        user = us.get_user(db, creator_id)
         if not user:
-            return "错误: 系统中无用户"
-        ticket = ts.create_ticket(
-            db, title=title, description=description,
-            creator_id=user[0].id, priority=priority,
-        )
-        return f"工单创建成功: #{ticket.id} {ticket.title} (状态: {ticket.status})"
+            return f"错误: 用户不存在: {creator_id}"
+        try:
+            ticket = ts.create_ticket(
+                db, title=title, description=description,
+                creator_id=creator_id, department_id=department_id,
+                priority=priority,
+            )
+            return f"工单创建成功: #{ticket.id} {ticket.title} (状态: {ticket.status})"
+        except ValueError as e:
+            return f"错误: {e}"
 
 
 @mcp.tool()
