@@ -61,17 +61,22 @@ pip install -r requirements.txt
 
 ## 🚀 启动系统
 
-### 1. 初始化数据库 + 填充测试数据
+### 1. 执行数据库迁移 + 填充测试数据
 
 ```bash
+# 执行数据库迁移（创建表结构）
+python -m cli db upgrade
+
+# 填充测试数据
 python -m scripts.seed_data
 ```
 
 你会看到类似这样的输出：
 
 ```
+INFO  [alembic.runtime.migration] Running upgrade  -> 0001, ...
 测试数据填充完成！
-  部门: 技术部, 运维部, 业务部
+  部门: 未分类(fallback=True), 技术部, 运维部, 业务部
   用户: 张三, 李四, 王五, 赵六
   工单: #1 服务器磁盘空间不足
          #2 新员工入职 - 配置开发环境
@@ -212,6 +217,11 @@ ticket-system/
 ├── scripts/
 │   └── seed_data.py       # 填充测试数据
 │
+├── alembic/               # 数据库迁移
+│   ├── env.py
+│   ├── script.py.mako
+│   └── versions/          # 迁移版本
+│
 ├── cli.py                 # 命令行工具
 ├── DEVELOPMENT.md         # 详细开发文档
 └── TODO.md                # 待做事项
@@ -250,9 +260,10 @@ python -m scripts.seed_data
 
 ### Q: 如何重置数据？
 
-删除 `ticket.db` 文件，然后重新执行 seed：
+删除 `ticket.db` 文件，然后重新执行迁移和 seed：
 
 ```bash
 rm ticket.db
+python -m cli db upgrade
 python -m scripts.seed_data
 ```
