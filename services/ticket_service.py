@@ -27,21 +27,28 @@ ALLOWED_TRANSITIONS = {
 }
 
 
+def _ensure_real_department(db: Session, department_id: int) -> Department:
+    dept = db.query(Department).filter(
+        Department.id == department_id,
+        Department.is_fallback == False,
+    ).first()
+    if not dept:
+        raise ValueError(f"真实部门不存在或使用了 fallback 部门: {department_id}")
+    return dept
+
+
 def create_ticket(
     db: Session,
     title: str,
     description: str,
     creator_id: int,
-    department_id: Optional[int] = None,
+    department_id: int,
     priority: str = "medium",
 ) -> Ticket:
     user = db.query(User).filter(User.id == creator_id).first()
     if not user:
         raise ValueError(f"创建者不存在: {creator_id}")
-    if department_id is not None:
-        dept = db.query(Department).filter(Department.id == department_id).first()
-        if not dept:
-            raise ValueError(f"部门不存在: {department_id}")
+    _ensure_real_department(db, department_id)
 
     ticket = Ticket(
         title=title,
@@ -55,6 +62,56 @@ def create_ticket(
     db.flush()
 
     _add_log(db, ticket.id, creator_id, "create")
+    db.flush()
+    db.refresh(ticket)
+    return ticket
+
+
+def update_ticket(
+    db: Session,
+    ticket_id: int,
+    operator_id: int,
+    title: str,
+    description: str,
+    priority: str,
+    department_id: int,
+    comment: str = "",
+) -> Ticket:
+    ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
+    if not ticket:
+        raise ValueError(f"工单不存在: {ticket_id}")
+
+    if ticket.status not in (STATUS_PENDING, STATUS_IN_PROGRESS):
+        raise ValueError(f"当前状态 '{ticket.status}' 不允许编辑")
+
+    operator = db.query(User).filter(User.id == operator_id).first()
+    if not operator:
+        raise ValueError(f"操作者不存在: {operator_id}")
+    if operator_id != ticket.creator_id:
+        raise ValueError("仅创建人可以编辑工单")
+
+    _ensure_real_department(db, department_id)
+
+    changes = {}
+    if title != ticket.title:
+        changes["title"] = (ticket.title, title)
+    if description != ticket.description:
+        changes["description"] = (ticket.description, description)
+    if priority != ticket.priority:
+        changes["priority"] = (ticket.priority, priority)
+    if department_id != ticket.department_id:
+        changes["department_id"] = (ticket.department_id, department_id)
+
+    if not changes:
+        return ticket
+
+    ticket.title = title
+    ticket.description = description
+    ticket.priority = priority
+    ticket.department_id = department_id
+    ticket.updated_at = datetime.now()
+
+    _add_log(db, ticket_id, operator_id, "update", comment if comment else "")
     db.flush()
     db.refresh(ticket)
     return ticket

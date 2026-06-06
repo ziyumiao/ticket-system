@@ -45,8 +45,15 @@ def get_department(db: Session, dept_id: int) -> Optional[Department]:
     return db.query(Department).filter(Department.id == dept_id).first()
 
 
-def list_departments(db: Session) -> List[Department]:
-    return db.query(Department).order_by(Department.name).all()
+def list_departments(db: Session, include_fallback: bool = False) -> List[Department]:
+    query = db.query(Department)
+    if not include_fallback:
+        query = query.filter(Department.is_fallback == False)
+    return query.order_by(Department.name).all()
+
+
+def get_fallback_department(db: Session) -> Optional[Department]:
+    return db.query(Department).filter(Department.is_fallback == True).first()
 
 
 def create_department(
