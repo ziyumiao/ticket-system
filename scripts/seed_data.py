@@ -45,6 +45,7 @@ def _get_or_create_ticket(db: Session, title: str, **kwargs):
 def seed():
     init_db()
     with session_scope() as db:
+        fallback = _get_or_create_dept(db, name="未分类", is_fallback=True)
         tech = _get_or_create_dept(db, name="技术部")
         ops = _get_or_create_dept(db, name="运维部")
         biz = _get_or_create_dept(db, name="业务部")
@@ -80,7 +81,7 @@ def seed():
         )
 
         logger.info("测试数据填充完成！")
-        logger.info("  部门: %s, %s, %s", tech.name, ops.name, biz.name)
+        logger.info("  部门: %s(fallback=%s), %s, %s, %s", fallback.name, fallback.is_fallback, tech.name, ops.name, biz.name)
         logger.info("  用户: %s, %s, %s, %s", alice.name, bob.name, carol.name, dave.name)
         logger.info("  工单: #%s %s", t1.id, t1.title)
         logger.info("         #%s %s", t2.id, t2.title)

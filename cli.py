@@ -3,6 +3,9 @@ import logging
 import sys
 import argparse
 
+from alembic.config import Config
+from alembic import command
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
@@ -27,6 +30,17 @@ def cmd_mcp():
     run()
 
 
+def cmd_db_upgrade():
+    alembic_cfg = Config("alembic.ini")
+    command.upgrade(alembic_cfg, "head")
+    logger.info("数据库迁移完成")
+
+
+def cmd_db_current():
+    alembic_cfg = Config("alembic.ini")
+    command.current(alembic_cfg)
+
+
 def main():
     parser = argparse.ArgumentParser(description="钉钉工单系统管理工具")
     sub = parser.add_subparsers(dest="command")
@@ -35,6 +49,11 @@ def main():
     sub.add_parser("seed", help="填充测试数据")
     sub.add_parser("mcp", help="启动 MCP Server")
 
+    db_parser = sub.add_parser("db", help="数据库迁移管理")
+    db_sub = db_parser.add_subparsers(dest="db_command")
+    db_sub.add_parser("upgrade", help="升级到最新迁移版本")
+    db_sub.add_parser("current", help="查看当前迁移版本")
+
     args = parser.parse_args()
     if args.command == "init":
         cmd_init()
@@ -42,6 +61,13 @@ def main():
         cmd_seed()
     elif args.command == "mcp":
         cmd_mcp()
+    elif args.command == "db":
+        if args.db_command == "upgrade":
+            cmd_db_upgrade()
+        elif args.db_command == "current":
+            cmd_db_current()
+        else:
+            print("请指定 db 子命令: upgrade, current")
     else:
         parser.print_help()
 
