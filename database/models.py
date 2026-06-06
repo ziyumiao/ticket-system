@@ -1,6 +1,6 @@
 from datetime import datetime
 from sqlalchemy import (
-    Column, Integer, String, Text, DateTime, ForeignKey, create_engine
+    Column, Integer, String, Text, DateTime, ForeignKey, Boolean, create_engine
 )
 from sqlalchemy.orm import DeclarativeBase, relationship
 
@@ -16,6 +16,7 @@ class Department(Base):
     name = Column(String(200), nullable=False)
     dingtalk_dept_id = Column(Integer, unique=True, nullable=True)
     parent_id = Column(Integer, ForeignKey("departments.id"), nullable=True)
+    is_fallback = Column(Boolean, default=False, nullable=False)
 
     parent = relationship("Department", remote_side=[id], back_populates="children")
     children = relationship("Department", back_populates="parent")
@@ -54,7 +55,7 @@ class Ticket(Base):
 
     creator_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     assignee_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    department_id = Column(Integer, ForeignKey("departments.id"), nullable=True)
+    department_id = Column(Integer, ForeignKey("departments.id"), nullable=False)
 
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
