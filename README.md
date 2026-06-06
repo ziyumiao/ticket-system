@@ -6,30 +6,47 @@
 
 ## 📦 安装
 
-### 1. 安装 Python
+### 1. 安装 pyenv 和 Python
 
-确保你的电脑有 Python 3.11 或更高版本。
+本项目使用 `pyenv` 管理 Python 版本，项目根目录的 `.python-version` 已指定为 `3.11.12`。
 
-打开终端（命令行），输入：
+如果还没有安装 `pyenv`，macOS 可以用 Homebrew 安装：
+
+```bash
+brew install pyenv
+```
+
+安装项目需要的 Python 版本：
+
+```bash
+pyenv install 3.11.12
+```
+
+进入项目目录后，`pyenv` 会自动读取 `.python-version` 并切换到对应版本。可以用下面的命令确认：
 
 ```bash
 python --version
 ```
 
-如果看到 `Python 3.11.x` 或更高版本，说明已经装好了。
-
-如果没有，去 https://www.python.org/downloads/ 下载安装。
+如果看到 `Python 3.11.x`，说明已经切换好了。
 
 ### 2. 下载项目
 
 把项目放到你的电脑上，比如放在 `~/pydata/ticket_system/` 目录。
 
-### 3. 安装依赖库
+### 3. 创建虚拟环境并安装依赖库
 
 打开终端，进入项目目录：
 
 ```bash
 cd ~/pydata/ticket_system
+```
+
+创建并启用虚拟环境：
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
 ```
 
 安装项目需要的 Python 包：
@@ -167,7 +184,7 @@ DATABASE_URL=mysql+pymysql://用户名:密码@localhost/数据库名
 ## 📂 项目文件说明
 
 ```
-ticket_system/
+ticket-system/
 ├── main.py                # 启动入口，运行这个文件就能启动 Web 服务
 ├── config.py              # 配置文件（数据库、钉钉等）
 ├── requirements.txt       # 依赖库列表
@@ -185,7 +202,7 @@ ticket_system/
 │   ├── web_routes.py      # Web 页面路由
 │   └── dingtalk_routes.py  # 钉钉接口（预留）
 │
-├── mcp/
+├── mcp_server/
 │   └── server.py          # MCP 服务（AI 调用用）
 │
 ├── web/

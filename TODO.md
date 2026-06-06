@@ -13,6 +13,10 @@
 - [x] MCP Server（create / list / get / update）
 - [x] 钉钉 Webhook 桩代码
 - [x] Seed 测试数据（幂等）
+- [x] P0 事务修复：MCP/seed 写操作统一 commit/rollback
+- [x] MCP SDK 接入：迁移本地目录为 `mcp_server/`，避免包名遮挡
+- [x] 基础单元测试：事务、状态机、MCP 写操作持久化
+- [x] 依赖升级：FastAPI 0.136.3 + MCP 1.27.2
 - [x] 两轮代码 Review + 16 项修复
 
 ## Phase 2 ⏳ Web 页面增强（待开始）
@@ -53,11 +57,10 @@
 - [ ] CSRF 保护
 - [ ] 用户/部门完整 CRUD API
 - [ ] 搜索/统计接口
-- [ ] 单元测试 + 集成测试
+- [ ] Web/API 集成测试
 
 ## 已知待优化项（低优先级）
 
-- [ ] Seed 数据原子性（单事务提交）
 - [ ] 数据库连接池配置
 - [ ] 请求限流
 - [ ] 操作日志记录前后状态值

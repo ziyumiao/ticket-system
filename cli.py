@@ -23,7 +23,7 @@ def cmd_seed():
 
 
 def cmd_mcp():
-    from mcp.server import run
+    from mcp_server.server import run
     run()
 
 

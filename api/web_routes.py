@@ -27,7 +27,7 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
     )
     for s in ["pending", "in_progress", "reviewing", "done", "closed"]:
         counts.setdefault(s, 0)
-    return templates.TemplateResponse("dashboard.html", {
+    return templates.TemplateResponse(request, "dashboard.html", {
         "request": request, "counts": counts,
     })
 
@@ -42,7 +42,7 @@ def ticket_list(
     filter_status = status if status else None
     tickets, total = ts.list_tickets(db, status=filter_status, page=page)
     total_pages = max(1, (total + 19) // 20)
-    return templates.TemplateResponse("ticket_list.html", {
+    return templates.TemplateResponse(request, "ticket_list.html", {
         "request": request,
         "tickets": tickets,
         "current_status": status,
@@ -55,7 +55,7 @@ def ticket_list(
 def create_ticket_page(request: Request, db: Session = Depends(get_db)):
     users = us.list_users(db)
     departments = us.list_departments(db)
-    return templates.TemplateResponse("ticket_form.html", {
+    return templates.TemplateResponse(request, "ticket_form.html", {
         "request": request,
         "users": users,
         "departments": departments,
@@ -83,7 +83,7 @@ def ticket_detail(request: Request, ticket_id: int, error: str = "", db: Session
         return RedirectResponse(url="/tickets")
     users = us.list_users(db)
     allowed_actions = list(ts.ALLOWED_TRANSITIONS.get(ticket.status, {}).keys())
-    return templates.TemplateResponse("ticket_detail.html", {
+    return templates.TemplateResponse(request, "ticket_detail.html", {
         "request": request,
         "ticket": ticket,
         "users": users,
@@ -121,7 +121,7 @@ def ticket_action_post(
 def user_manage(request: Request, db: Session = Depends(get_db)):
     users = us.list_users(db)
     departments = us.list_departments(db)
-    return templates.TemplateResponse("user_manage.html", {
+    return templates.TemplateResponse(request, "user_manage.html", {
         "request": request,
         "users": users,
         "departments": departments,

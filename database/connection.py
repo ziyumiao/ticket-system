@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from typing import Generator
 
 from sqlalchemy import create_engine
@@ -20,6 +21,19 @@ def init_db():
 
 def get_session():
     return Session(engine)
+
+
+@contextmanager
+def session_scope() -> Generator[Session, None, None]:
+    db = get_session()
+    try:
+        yield db
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
 
 
 def get_db() -> Generator[Session, None, None]:

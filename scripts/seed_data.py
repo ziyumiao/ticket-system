@@ -5,8 +5,8 @@ sys.path.insert(0, ".")
 
 from sqlalchemy.orm import Session
 
-from database.connection import init_db, get_session
-from database.models import Department, User
+from database.connection import init_db, session_scope
+from database.models import Department, Ticket, User
 from services import user_service as us
 from services import ticket_service as ts
 
@@ -29,10 +29,22 @@ def _get_or_create_user(db: Session, name: str, **kwargs):
     return us.create_user(db, name=name, **kwargs)
 
 
+def _get_or_create_ticket(db: Session, title: str, **kwargs):
+    ticket = db.query(Ticket).filter(
+        Ticket.title == title,
+        Ticket.description == kwargs.get("description", ""),
+        Ticket.creator_id == kwargs.get("creator_id"),
+        Ticket.department_id == kwargs.get("department_id"),
+    ).first()
+    if ticket:
+        logger.info("工单已存在，跳过: %s", title)
+        return ticket, False
+    return ts.create_ticket(db, title=title, **kwargs), True
+
+
 def seed():
     init_db()
-    db = get_session()
-    try:
+    with session_scope() as db:
         tech = _get_or_create_dept(db, name="技术部")
         ops = _get_or_create_dept(db, name="运维部")
         biz = _get_or_create_dept(db, name="业务部")
@@ -42,22 +54,27 @@ def seed():
         carol = _get_or_create_user(db, name="王五", department_id=ops.id)
         dave = _get_or_create_user(db, name="赵六", department_id=biz.id)
 
-        t1 = ts.create_ticket(
-            db, title="服务器磁盘空间不足",
+        t1, t1_created = _get_or_create_ticket(
+            db,
+            title="服务器磁盘空间不足",
             description="生产服务器 /data 分区使用率已达 95%，需要清理或扩容",
             creator_id=alice.id, department_id=ops.id, priority="high",
         )
-        ts.transition_ticket(db, t1.id, "assign", bob.id)
-        ts.transition_ticket(db, t1.id, "submit_review", bob.id, "已清理日志文件，释放了 20G 空间")
+        if t1_created and t1.status == ts.STATUS_PENDING:
+            ts.transition_ticket(db, t1.id, "assign", bob.id)
+        if t1_created and t1.status == ts.STATUS_IN_PROGRESS:
+            ts.transition_ticket(db, t1.id, "submit_review", bob.id, "已清理日志文件，释放了 20G 空间")
 
-        t2 = ts.create_ticket(
-            db, title="新员工入职 - 配置开发环境",
+        t2, _ = _get_or_create_ticket(
+            db,
+            title="新员工入职 - 配置开发环境",
             description="需要为新员工配置 Git 权限、开发工具和 VPN",
             creator_id=carol.id, department_id=tech.id,
         )
 
-        t3 = ts.create_ticket(
-            db, title="数据库查询慢",
+        t3, _ = _get_or_create_ticket(
+            db,
+            title="数据库查询慢",
             description="订单查询接口响应超过 5 秒，需要优化索引",
             creator_id=dave.id, department_id=tech.id, priority="urgent",
         )
@@ -68,8 +85,6 @@ def seed():
         logger.info("  工单: #%s %s", t1.id, t1.title)
         logger.info("         #%s %s", t2.id, t2.title)
         logger.info("         #%s %s", t3.id, t3.title)
-    finally:
-        db.close()
 
 
 if __name__ == "__main__":

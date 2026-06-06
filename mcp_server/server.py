@@ -1,6 +1,25 @@
-from mcp.server.fastmcp import FastMCP
+try:
+    from mcp.server.fastmcp import FastMCP
+    _fastmcp_import_error = None
+except ModuleNotFoundError as exc:
+    _fastmcp_import_error = exc
 
-from database.connection import get_session
+    class FastMCP:
+        def __init__(self, name: str):
+            self.name = name
+
+        def tool(self):
+            def decorator(func):
+                return func
+
+            return decorator
+
+        def run(self, transport: str = "stdio"):
+            raise RuntimeError(
+                "MCP SDK 未安装或无法导入，请安装提供 mcp.server.fastmcp 的 MCP 包后再启动 MCP 服务"
+            ) from _fastmcp_import_error
+
+from database.connection import session_scope
 from services import ticket_service as ts
 from services import user_service as us
 
@@ -10,8 +29,7 @@ mcp = FastMCP("钉钉工单系统")
 @mcp.tool()
 def create_ticket(title: str, description: str = "", priority: str = "medium") -> str:
     """创建工单（默认使用第一个用户作为创建人，后续可指定）"""
-    db = get_session()
-    try:
+    with session_scope() as db:
         user = us.list_users(db)
         if not user:
             return "错误: 系统中无用户"
@@ -20,15 +38,12 @@ def create_ticket(title: str, description: str = "", priority: str = "medium") -
             creator_id=user[0].id, priority=priority,
         )
         return f"工单创建成功: #{ticket.id} {ticket.title} (状态: {ticket.status})"
-    finally:
-        db.close()
 
 
 @mcp.tool()
 def list_tickets(status: str = "") -> str:
     """查询工单列表，可按状态筛选"""
-    db = get_session()
-    try:
+    with session_scope() as db:
         filter_status = status if status else None
         tickets, total = ts.list_tickets(db, status=filter_status)
         if not tickets:
@@ -40,15 +55,12 @@ def list_tickets(status: str = "") -> str:
                 f"#{t.id} [{t.status}] {t.title} - {assignee}"
             )
         return "\n".join(lines)
-    finally:
-        db.close()
 
 
 @mcp.tool()
 def get_ticket(ticket_id: int) -> str:
     """查看工单详情"""
-    db = get_session()
-    try:
+    with session_scope() as db:
         t = ts.get_ticket(db, ticket_id)
         if not t:
             return f"工单 #{ticket_id} 不存在"
@@ -66,8 +78,6 @@ def get_ticket(ticket_id: int) -> str:
         if t.closed_at:
             lines.append(f"关闭时间: {t.closed_at}")
         return "\n".join(lines)
-    finally:
-        db.close()
 
 
 @mcp.tool()
@@ -75,22 +85,20 @@ def update_ticket_status(ticket_id: int, action: str, comment: str = "", operato
     """流转工单状态
     action 可选值: assign(指派), reject(驳回), submit_review(提交验收), approve(验收通过), decline(验收不通过)
     """
-    db = get_session()
     try:
-        t = ts.get_ticket(db, ticket_id)
-        if not t:
-            return f"工单 #{ticket_id} 不存在"
-        if operator_id == 0:
-            operator_id = t.creator_id
-        t = ts.transition_ticket(
-            db, ticket_id, action, operator_id,
-            comment if comment else None,
-        )
-        return f"操作成功: #{t.id} 状态变更为 {t.status}"
+        with session_scope() as db:
+            t = ts.get_ticket(db, ticket_id)
+            if not t:
+                return f"工单 #{ticket_id} 不存在"
+            if operator_id == 0:
+                operator_id = t.creator_id
+            t = ts.transition_ticket(
+                db, ticket_id, action, operator_id,
+                comment if comment else None,
+            )
+            return f"操作成功: #{t.id} 状态变更为 {t.status}"
     except ValueError as e:
         return f"操作失败: {e}"
-    finally:
-        db.close()
 
 
 def run():
