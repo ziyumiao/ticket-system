@@ -1,17 +1,35 @@
 {% extends "layout.html" %}
-{% block title %}创建工单 - 钉钉工单系统{% endblock %}
+{% block title %}{{ "编辑工单" if is_edit else "创建工单" }} - 钉钉工单系统{% endblock %}
 {% block content %}
-<h1>创建工单</h1>
+<h1>{{ "编辑工单 #" ~ ticket.id if is_edit else "创建工单" }}</h1>
 
-<form method="post" action="/tickets/create" class="form">
+{% if errors %}
+<div class="alert alert-error">
+  {% for e in errors %}
+  <p>{{ e }}</p>
+  {% endfor %}
+</div>
+{% endif %}
+
+<form method="post" action="{{ '/tickets/' ~ ticket.id ~ '/edit' if is_edit else '/tickets/create' }}" class="form">
   <div class="form-group">
     <label>标题</label>
-    <input type="text" name="title" required maxlength="200">
+    <input type="text" name="title" required maxlength="200"
+           value="{{ ticket.title if is_edit else '' }}">
   </div>
   <div class="form-group">
     <label>描述</label>
-    <textarea name="description" rows="4"></textarea>
+    <textarea name="description" rows="4">{{ ticket.description if is_edit else '' }}</textarea>
   </div>
+  {% if is_edit %}
+  <div class="form-group">
+    <label>操作人 (operator_id)</label>
+    <select name="operator_id" required>
+      <option value="{{ ticket.creator_id }}">{{ ticket.creator.name if ticket.creator else ticket.creator_id }}</option>
+    </select>
+    <span class="help-text">当前仅支持创建人编辑</span>
+  </div>
+  {% else %}
   <div class="form-group">
     <label>创建人</label>
     <select name="creator_id" required>
@@ -20,25 +38,37 @@
       {% endfor %}
     </select>
   </div>
+  {% endif %}
   <div class="form-group">
     <label>部门</label>
-    <select name="department_id">
-      <option value="">无</option>
+    <select name="department_id" required>
+      {% if is_edit and ticket.department and ticket.department.is_fallback %}
+      <option value="" disabled selected>未分类（需改为真实部门）</option>
+      {% endif %}
       {% for d in departments %}
-      <option value="{{ d.id }}">{{ d.name }}</option>
+      <option value="{{ d.id }}"
+        {%- if is_edit and ticket.department_id == d.id %} selected{% endif %}>
+        {{ d.name }}
+      </option>
       {% endfor %}
     </select>
   </div>
   <div class="form-group">
     <label>优先级</label>
     <select name="priority">
-      <option value="low">low</option>
-      <option value="medium" selected>medium</option>
-      <option value="high">high</option>
-      <option value="urgent">urgent</option>
+      <option value="low" {% if is_edit and ticket.priority == 'low' %}selected{% endif %}>low</option>
+      <option value="medium" {% if not is_edit or ticket.priority == 'medium' %}selected{% endif %}>medium</option>
+      <option value="high" {% if is_edit and ticket.priority == 'high' %}selected{% endif %}>high</option>
+      <option value="urgent" {% if is_edit and ticket.priority == 'urgent' %}selected{% endif %}>urgent</option>
     </select>
   </div>
-  <button type="submit" class="btn">创建</button>
-  <a href="/tickets" class="btn">取消</a>
+  {% if is_edit %}
+  <div class="form-group">
+    <label>编辑备注</label>
+    <textarea name="comment" rows="2" placeholder="选填，说明修改原因"></textarea>
+  </div>
+  {% endif %}
+  <button type="submit" class="btn">{{ "保存修改" if is_edit else "创建" }}</button>
+  <a href="{{ '/tickets/' ~ ticket.id if is_edit else '/tickets' }}" class="btn">取消</a>
 </form>
 {% endblock %}

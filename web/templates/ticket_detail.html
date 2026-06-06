@@ -7,17 +7,30 @@
 <div class="alert alert-error">{{ error }}</div>
 {% endif %}
 
+{% if success %}
+<div class="alert alert-success">{{ success }}</div>
+{% endif %}
+
 <div class="detail-card">
   <h2>{{ ticket.title }}</h2>
   <div class="meta">
     <span class="tag tag-{{ ticket.status }}">{{ ticket.status }}</span>
     <span class="tag tag-{{ ticket.priority }}">{{ ticket.priority }}</span>
+    {% if can_edit %}
+    <a href="/tickets/{{ ticket.id }}/edit" class="btn btn-sm">编辑</a>
+    {% endif %}
   </div>
   <p class="desc">{{ ticket.description }}</p>
   <div class="info">
     <div>创建人: {{ ticket.creator.name if ticket.creator else '' }}</div>
     <div>处理人: {{ ticket.assignee.name if ticket.assignee else '未指派' }}</div>
-    <div>部门: {{ ticket.department.name if ticket.department else '' }}</div>
+    <div>部门:
+      {%- if ticket.department and ticket.department.is_fallback -%}
+        <span class="tag tag-warning">未分类（需改为真实部门）</span>
+      {%- else -%}
+        {{ ticket.department.name if ticket.department else '' }}
+      {%- endif -%}
+    </div>
     <div>创建时间: {{ ticket.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
     {% if ticket.closed_at %}
     <div>关闭时间: {{ ticket.closed_at.strftime('%Y-%m-%d %H:%M') }}</div>

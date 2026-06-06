@@ -3,6 +3,29 @@
 {% block content %}
 <h1>用户管理</h1>
 
+<h2>部门列表</h2>
+<table class="table">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>名称</th>
+      <th>父部门</th>
+      <th>类型</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for d in departments %}
+    <tr>
+      <td>{{ d.id }}</td>
+      <td>{{ d.name }}</td>
+      <td>{{ d.parent.name if d.parent else '-' }}</td>
+      <td>{% if d.is_fallback %}<span class="tag tag-warning">系统备用</span>{% else %}正常{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h2>用户列表</h2>
 <table class="table">
   <thead>
     <tr>
