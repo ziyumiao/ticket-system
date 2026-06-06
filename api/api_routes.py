@@ -16,8 +16,17 @@ class TicketCreate(BaseModel):
     title: str
     description: str = ""
     creator_id: int
-    department_id: Optional[int] = None
+    department_id: int
     priority: str = "medium"
+
+
+class TicketUpdate(BaseModel):
+    title: str
+    description: str = ""
+    priority: str = "medium"
+    department_id: int
+    operator_id: int
+    comment: str = ""
 
 
 class TicketAction(BaseModel):
@@ -42,7 +51,7 @@ class TicketOut(BaseModel):
     priority: str
     creator_id: int
     assignee_id: Optional[int] = None
-    department_id: Optional[int] = None
+    department_id: int
     created_at: datetime
     updated_at: datetime
     closed_at: Optional[datetime] = None
@@ -71,6 +80,7 @@ class DepartmentOut(BaseModel):
     name: str
     dingtalk_dept_id: Optional[int] = None
     parent_id: Optional[int] = None
+    is_fallback: bool = False
 
     class Config:
         from_attributes = True
@@ -107,16 +117,38 @@ def _ticket_to_out(ticket) -> TicketOut:
 
 @router.post("/tickets", response_model=TicketOut)
 def create_ticket(data: TicketCreate, db: Session = Depends(get_db)):
-    ticket = ts.create_ticket(
-        db,
-        title=data.title,
-        description=data.description,
-        creator_id=data.creator_id,
-        department_id=data.department_id,
-        priority=data.priority,
-    )
-    ticket = ts.get_ticket(db, ticket.id)
-    return _ticket_to_out(ticket)
+    try:
+        ticket = ts.create_ticket(
+            db,
+            title=data.title,
+            description=data.description,
+            creator_id=data.creator_id,
+            department_id=data.department_id,
+            priority=data.priority,
+        )
+        ticket = ts.get_ticket(db, ticket.id)
+        return _ticket_to_out(ticket)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.put("/tickets/{ticket_id}", response_model=TicketOut)
+def update_ticket(ticket_id: int, data: TicketUpdate, db: Session = Depends(get_db)):
+    try:
+        ticket = ts.update_ticket(
+            db,
+            ticket_id=ticket_id,
+            operator_id=data.operator_id,
+            title=data.title,
+            description=data.description,
+            priority=data.priority,
+            department_id=data.department_id,
+            comment=data.comment,
+        )
+        ticket = ts.get_ticket(db, ticket.id)
+        return _ticket_to_out(ticket)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/tickets", response_model=dict)
@@ -177,5 +209,8 @@ def list_users(
 
 
 @router.get("/departments", response_model=List[DepartmentOut])
-def list_departments(db: Session = Depends(get_db)):
-    return us.list_departments(db)
+def list_departments(
+    include_fallback: bool = Query(False),
+    db: Session = Depends(get_db),
+):
+    return us.list_departments(db, include_fallback=include_fallback)
