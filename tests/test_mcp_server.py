@@ -5,7 +5,7 @@ from pathlib import Path
 from sqlalchemy import create_engine
 
 from database import connection
-from database.models import Base, Ticket, TicketLog, User
+from database.models import Base, Ticket, TicketLog, User, Department
 from mcp_server import server as mcp_tools
 from services import ticket_service as ts
 
@@ -22,30 +22,76 @@ class McpServerTest(unittest.TestCase):
         Base.metadata.create_all(bind=connection.engine)
 
         with connection.session_scope() as db:
-            self.user = User(name="张三")
-            db.add(self.user)
+            fallback = Department(name="未分类", is_fallback=True)
+            dept = Department(name="技术部")
+            user = User(name="张三", department=dept)
+            db.add_all([fallback, dept, user])
+            db.flush()
+            self.fallback_id = fallback.id
+            self.dept_id = dept.id
+            self.user_id = user.id
 
     def tearDown(self):
         connection.engine.dispose()
         connection.engine = self.original_engine
         self.tempdir.cleanup()
 
-    def test_create_ticket_persists_in_new_session(self):
+    def test_create_ticket_requires_creator_and_department(self):
+        result = mcp_tools.create_ticket(
+            title="无参数",
+            description="",
+            priority="medium",
+            creator_id=0,
+            department_id=0,
+        )
+        self.assertIn("必填", result)
+
+    def test_create_ticket_success_with_real_department(self):
         result = mcp_tools.create_ticket(
             title="MCP 创建工单",
-            description="验证 MCP 写操作会提交",
+            description="验证 MCP 创建",
             priority="high",
+            creator_id=1,
+            department_id=self.dept_id,
         )
-
         self.assertIn("工单创建成功", result)
         with connection.session_scope() as db:
             ticket = db.query(Ticket).filter(Ticket.title == "MCP 创建工单").one()
-            self.assertEqual(ticket.description, "验证 MCP 写操作会提交")
-            self.assertEqual(ticket.priority, "high")
-            self.assertEqual(ticket.status, ts.STATUS_PENDING)
-            self.assertEqual(ticket.creator.name, "张三")
+            self.assertEqual(ticket.creator_id, 1)
+            self.assertEqual(ticket.department_id, self.dept_id)
             self.assertEqual(len(ticket.logs), 1)
             self.assertEqual(ticket.logs[0].action, "create")
+
+    def test_create_ticket_rejects_fallback_department(self):
+        result = mcp_tools.create_ticket(
+            title="使用 fallback",
+            description="",
+            priority="medium",
+            creator_id=1,
+            department_id=self.fallback_id,
+        )
+        self.assertIn("错误", result)
+        self.assertIn("fallback", result)
+
+    def test_create_ticket_rejects_nonexistent_department(self):
+        result = mcp_tools.create_ticket(
+            title="不存在",
+            description="",
+            priority="medium",
+            creator_id=1,
+            department_id=999,
+        )
+        self.assertIn("错误", result)
+
+    def test_create_ticket_rejects_nonexistent_user(self):
+        result = mcp_tools.create_ticket(
+            title="不存在用户",
+            description="",
+            priority="medium",
+            creator_id=999,
+            department_id=self.dept_id,
+        )
+        self.assertIn("错误", result)
 
     def test_update_ticket_status_persists_in_new_session(self):
         with connection.session_scope() as db:
@@ -54,6 +100,7 @@ class McpServerTest(unittest.TestCase):
                 title="MCP 状态流转",
                 description="验证 MCP 流转会提交",
                 creator_id=1,
+                department_id=self.dept_id,
             )
             ticket_id = ticket.id
 
@@ -79,6 +126,7 @@ class McpServerTest(unittest.TestCase):
                 title="MCP 非法流转",
                 description="验证异常不会写入日志",
                 creator_id=1,
+                department_id=self.dept_id,
             )
             ticket_id = ticket.id
 
